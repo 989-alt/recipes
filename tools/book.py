@@ -3,6 +3,8 @@
   RECIPE_PW=... python3 tools/book.py unpack   # index.html -> .work/book.html + .work/data.json
   RECIPE_PW=... python3 tools/book.py pack     # .work/data.json -> .work/book.html -> index.html (encrypted)
   python3 tools/book.py todo                   # .work/todo.json: recipes whose steps are missing (need video analysis)
+  python3 tools/book.py shell                  # .work/book.html -> .work/shell.html (page code only, DATA = {})
+  python3 tools/book.py build                  # .work/shell.html + .work/data.json -> .work/book.html (plain, open it to test)
 
 window.DATA = {ui, recipes}. Every recipe: id, video_id, dish, video_title, kind, date, source, category,
 ingredients[{name, amount, tag, pantry, group, basis{type, at?, quote?, url?}}], steps[], tips[], thumb, also[],
@@ -35,6 +37,16 @@ elif cmd == "pack":
     blob = json.dumps(data, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
     open(os.path.join(W, "book.html"), "w").write(pre + blob + ";" + post)
     crypt("enc")
+elif cmd == "shell":
+    pre, _, post = split(open(os.path.join(W, "book.html")).read())
+    open(os.path.join(W, "shell.html"), "w").write(pre + "{};" + post)
+    print("page code -> .work/shell.html")
+elif cmd == "build":
+    pre, _, post = split(open(os.path.join(W, "shell.html")).read())
+    data = json.load(open(os.path.join(W, "data.json")))
+    blob = json.dumps(data, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
+    open(os.path.join(W, "book.html"), "w").write(pre + blob + ";" + post)
+    print("shell + data -> .work/book.html")
 elif cmd == "todo":
     data = json.load(open(os.path.join(W, "data.json")))
     todo = [{"id": r["id"], "video_id": r["video_id"], "channel": r["channel"], "kind": r["kind"], "dish": r["dish"], "note": r.get("note", "")}
